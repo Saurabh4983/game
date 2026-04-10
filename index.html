@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+
+  <!-- 🔥 MOST IMPORTANT FIX -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>Slice to Cut PRO</title>
 
   <style>
     body {
+      margin: 0;
+      overflow: hidden;
       text-align: center;
       font-family: Arial;
       background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
@@ -12,70 +19,62 @@
     }
 
     h1 {
-      margin: 10px;
-      text-shadow: 2px 2px 10px black;
+      margin: 5px;
+      font-size: 20px;
     }
 
     h2 {
+      font-size: 14px;
       background: rgba(0,0,0,0.5);
       display: inline-block;
-      padding: 10px 20px;
+      padding: 5px 10px;
       border-radius: 10px;
     }
 
     #startBtn {
-      padding: 10px 20px;
-      font-size: 18px;
+      padding: 8px 15px;
+      font-size: 16px;
       background: limegreen;
       border: none;
       border-radius: 10px;
-      cursor: pointer;
-      margin-top: 10px;
+      margin: 5px;
     }
 
+    /* 🔥 FULL MOBILE SCREEN GAME */
     #gameArea {
-      width: 400px;
-      height: 600px;
+      width: 100%;
+      height: 80vh;
       margin: auto;
       position: relative;
       overflow: hidden;
-      border-radius: 20px;
-      border: 2px solid white;
+      border-radius: 0;
+      border: none;
       background: #111;
-      box-shadow: 0 0 20px rgba(255,255,255,0.5);
     }
 
     .item {
-      width: 60px;
-      height: 60px;
+      width: 50px;
+      height: 50px;
       position: absolute;
-      cursor: pointer;
       border-radius: 50%;
-      box-shadow: 0 0 10px rgba(255,255,255,0.6);
-    }
-
-    .cut {
-      transform: rotate(25deg) scale(0.6);
-      opacity: 0.7;
     }
 
     .piece {
-      width: 30px;
-      height: 60px;
+      width: 25px;
+      height: 50px;
       position: absolute;
       background-size: cover;
       pointer-events: none;
     }
 
     .explosion {
-      width: 80px;
-      height: 80px;
+      width: 70px;
+      height: 70px;
       position: absolute;
       background: radial-gradient(circle, yellow, orange, red);
       border-radius: 50%;
       pointer-events: none;
     }
-
   </style>
 </head>
 
@@ -103,22 +102,25 @@ High Score: <span id="highScore">0</span>
 let score = 0;
 let miss = 0;
 let level = 1;
-let speed = 6;
+let speed = 5;
 let gameInterval;
 
 const gameArea = document.getElementById("gameArea");
+
+// 🔥 Dynamic width fix
+function getMaxX() {
+  return gameArea.clientWidth - 60;
+}
 
 // High Score
 let highScore = localStorage.getItem("highScore") || 0;
 document.getElementById("highScore").innerText = highScore;
 
-// Start Game
 function startGame() {
   document.getElementById("startBtn").style.display = "none";
   gameInterval = setInterval(createItem, 700);
 }
 
-// Split
 function splitFruit(item) {
   let left = document.createElement("div");
   let right = document.createElement("div");
@@ -157,7 +159,6 @@ function splitFruit(item) {
   }, 30);
 }
 
-// Bomb explosion
 function explodeBomb(item) {
   let blast = document.createElement("div");
   blast.classList.add("explosion");
@@ -170,7 +171,6 @@ function explodeBomb(item) {
   setTimeout(() => blast.remove(), 300);
 }
 
-// Create item
 function createItem() {
   const item = document.createElement("img");
 
@@ -187,7 +187,8 @@ function createItem() {
   item.dataset.type = rand.type;
   item.classList.add("item");
 
-  item.style.left = Math.random() * 340 + "px";
+  // 🔥 FIXED MOBILE RANDOM POSITION
+  item.style.left = Math.random() * getMaxX() + "px";
   item.style.top = "0px";
 
   gameArea.appendChild(item);
@@ -196,7 +197,7 @@ function createItem() {
     let top = parseInt(item.style.top);
     item.style.top = top + speed + "px";
 
-    if (top > 550) {
+    if (top > gameArea.clientHeight - 50) {
       clearInterval(fall);
       item.remove();
 
@@ -214,7 +215,6 @@ function createItem() {
   item.addEventListener("touchstart", () => handleClick(item, fall));
 }
 
-// Handle click
 function handleClick(item, fall) {
   clearInterval(fall);
 
@@ -241,7 +241,6 @@ function handleClick(item, fall) {
   updateUI();
 }
 
-// Update UI
 function updateUI() {
   document.getElementById("score").innerText = score;
   document.getElementById("miss").innerText = miss;
@@ -255,7 +254,6 @@ function updateUI() {
   document.getElementById("highScore").innerText = highScore;
 }
 
-// Game Over
 function gameOver() {
   alert("💀 Game Over! Final Score: " + score);
   location.reload();
