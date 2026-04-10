@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
 
-  <!-- 🔥 MOST IMPORTANT FIX -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <title>Slice to Cut PRO</title>
@@ -18,10 +17,7 @@
       color: white;
     }
 
-    h1 {
-      margin: 5px;
-      font-size: 20px;
-    }
+    h1 { margin: 5px; font-size: 20px; }
 
     h2 {
       font-size: 14px;
@@ -40,15 +36,12 @@
       margin: 5px;
     }
 
-    /* 🔥 FULL MOBILE SCREEN GAME */
     #gameArea {
       width: 100%;
       height: 80vh;
       margin: auto;
       position: relative;
       overflow: hidden;
-      border-radius: 0;
-      border: none;
       background: #111;
     }
 
@@ -90,7 +83,7 @@ High Score: <span id="highScore">0</span>
 </h2>
 
 <br>
-<button onclick="startGame()" id="startBtn">▶ Start Game</button>
+<button type="button" onclick="startGame()" id="startBtn">▶ Start Game</button>
 
 <div id="gameArea"></div>
 
@@ -107,12 +100,10 @@ let gameInterval;
 
 const gameArea = document.getElementById("gameArea");
 
-// 🔥 Dynamic width fix
 function getMaxX() {
   return gameArea.clientWidth - 60;
 }
 
-// High Score
 let highScore = localStorage.getItem("highScore") || 0;
 document.getElementById("highScore").innerText = highScore;
 
@@ -187,7 +178,6 @@ function createItem() {
   item.dataset.type = rand.type;
   item.classList.add("item");
 
-  // 🔥 FIXED MOBILE RANDOM POSITION
   item.style.left = Math.random() * getMaxX() + "px";
   item.style.top = "0px";
 
@@ -211,8 +201,12 @@ function createItem() {
     }
   }, 40);
 
-  item.addEventListener("click", () => handleClick(item, fall));
-  item.addEventListener("touchstart", () => handleClick(item, fall));
+  // 🔥 FINAL FIX (NO RELOAD ISSUE)
+  item.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleClick(item, fall);
+  });
 }
 
 function handleClick(item, fall) {
@@ -256,7 +250,7 @@ function updateUI() {
 
 function gameOver() {
   alert("💀 Game Over! Final Score: " + score);
-  location.reload();
+  clearInterval(gameInterval); // 🔥 reload हटाया
 }
 
 </script>
