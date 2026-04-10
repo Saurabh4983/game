@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Slice to Cut PRO</title>
+
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      color: white;
+    }
+
+    h1 {
+      margin: 10px;
+      text-shadow: 2px 2px 10px black;
+    }
+
+    h2 {
+      background: rgba(0,0,0,0.5);
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 10px;
+    }
+
+    #startBtn {
+      padding: 10px 20px;
+      font-size: 18px;
+      background: limegreen;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    #gameArea {
+      width: 400px;
+      height: 600px;
+      margin: auto;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      border: 2px solid white;
+      background: #111;
+      box-shadow: 0 0 20px rgba(255,255,255,0.5);
+    }
+
+    .item {
+      width: 60px;
+      height: 60px;
+      position: absolute;
+      cursor: pointer;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(255,255,255,0.6);
+    }
+
+    .cut {
+      transform: rotate(25deg) scale(0.6);
+      opacity: 0.7;
+    }
+
+    .piece {
+      width: 30px;
+      height: 60px;
+      position: absolute;
+      background-size: cover;
+      pointer-events: none;
+    }
+
+    .explosion {
+      width: 80px;
+      height: 80px;
+      position: absolute;
+      background: radial-gradient(circle, yellow, orange, red);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h1>🍉 Slice to Cut PRO</h1>
+
+<h2>
+Score: <span id="score">0</span> |
+Miss: <span id="miss">0</span>/5 |
+Level: <span id="level">1</span> |
+High Score: <span id="highScore">0</span>
+</h2>
+
+<br>
+<button onclick="startGame()" id="startBtn">▶ Start Game</button>
+
+<div id="gameArea"></div>
+
+<audio id="cutSound" src="https://www.fesliyanstudios.com/play-mp3/387"></audio>
+<audio id="bombSound" src="https://www.fesliyanstudios.com/play-mp3/4387"></audio>
+
+<script>
+
+let score = 0;
+let miss = 0;
+let level = 1;
+let speed = 6;
+let gameInterval;
+
+const gameArea = document.getElementById("gameArea");
+
+// High Score
+let highScore = localStorage.getItem("highScore") || 0;
+document.getElementById("highScore").innerText = highScore;
+
+// Start Game
+function startGame() {
+  document.getElementById("startBtn").style.display = "none";
+  gameInterval = setInterval(createItem, 700);
+}
+
+// Split
+function splitFruit(item) {
+  let left = document.createElement("div");
+  let right = document.createElement("div");
+
+  left.classList.add("piece");
+  right.classList.add("piece");
+
+  left.style.backgroundImage = `url(${item.src})`;
+  right.style.backgroundImage = `url(${item.src})`;
+
+  left.style.left = item.style.left;
+  right.style.left = item.style.left;
+
+  left.style.top = item.style.top;
+  right.style.top = item.style.top;
+
+  gameArea.appendChild(left);
+  gameArea.appendChild(right);
+
+  let move = 0;
+
+  let anim = setInterval(() => {
+    move += 5;
+
+    left.style.top = (parseInt(left.style.top) + 5) + "px";
+    left.style.left = (parseInt(left.style.left) - 3) + "px";
+
+    right.style.top = (parseInt(right.style.top) + 5) + "px";
+    right.style.left = (parseInt(right.style.left) + 3) + "px";
+
+    if (move > 100) {
+      clearInterval(anim);
+      left.remove();
+      right.remove();
+    }
+  }, 30);
+}
+
+// Bomb explosion
+function explodeBomb(item) {
+  let blast = document.createElement("div");
+  blast.classList.add("explosion");
+
+  blast.style.left = item.style.left;
+  blast.style.top = item.style.top;
+
+  gameArea.appendChild(blast);
+
+  setTimeout(() => blast.remove(), 300);
+}
+
+// Create item
+function createItem() {
+  const item = document.createElement("img");
+
+  const items = [
+    {src:"https://cdn-icons-png.flaticon.com/512/415/415733.png", type:"fruit"},
+    {src:"https://cdn-icons-png.flaticon.com/512/590/590685.png", type:"fruit"},
+    {src:"https://cdn-icons-png.flaticon.com/512/135/135620.png", type:"fruit"},
+    {src:"https://cdn-icons-png.flaticon.com/512/616/616494.png", type:"bomb"}
+  ];
+
+  let rand = items[Math.floor(Math.random() * items.length)];
+
+  item.src = rand.src;
+  item.dataset.type = rand.type;
+  item.classList.add("item");
+
+  item.style.left = Math.random() * 340 + "px";
+  item.style.top = "0px";
+
+  gameArea.appendChild(item);
+
+  let fall = setInterval(() => {
+    let top = parseInt(item.style.top);
+    item.style.top = top + speed + "px";
+
+    if (top > 550) {
+      clearInterval(fall);
+      item.remove();
+
+      if (item.dataset.type === "fruit") {
+        miss++;
+        score--;
+      }
+
+      updateUI();
+      if (miss >= 5) gameOver();
+    }
+  }, 40);
+
+  item.addEventListener("click", () => handleClick(item, fall));
+  item.addEventListener("touchstart", () => handleClick(item, fall));
+}
+
+// Handle click
+function handleClick(item, fall) {
+  clearInterval(fall);
+
+  if (item.dataset.type === "bomb") {
+    document.getElementById("bombSound").play();
+    explodeBomb(item);
+
+    setTimeout(() => gameOver(), 300);
+    return;
+  }
+
+  document.getElementById("cutSound").play();
+  splitFruit(item);
+
+  item.remove();
+
+  score++;
+
+  if (score % 5 === 0) {
+    level++;
+    speed++;
+  }
+
+  updateUI();
+}
+
+// Update UI
+function updateUI() {
+  document.getElementById("score").innerText = score;
+  document.getElementById("miss").innerText = miss;
+  document.getElementById("level").innerText = level;
+
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem("highScore", highScore);
+  }
+
+  document.getElementById("highScore").innerText = highScore;
+}
+
+// Game Over
+function gameOver() {
+  alert("💀 Game Over! Final Score: " + score);
+  location.reload();
+}
+
+</script>
+
+</body>
+</html>
